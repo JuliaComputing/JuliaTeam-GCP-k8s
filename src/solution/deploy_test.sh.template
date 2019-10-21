@@ -1,0 +1,17 @@
+REGISTRY_PATH="gcr.io\/juliacomputing-public\/juliateam-app"
+JC_AUTH_TOKEN="<<<TOKEN>>>"
+
+cat ./manifest/manifests.yaml \
+    | sed "s/\$IMAGE_JULIATEAM_APP/${REGISTRY_PATH}@sha256:4fbb7ed6046e8e4ef09dc4067037258c29dd507982de376385e7257828c9bf94/g" \
+    | sed "s/\$IMAGE_UBBAGENT/${REGISTRY_PATH}\/ubbagent@sha256:9e8bae6bf6cd825a4d20f5a08ecfa3ea0e5b726ce7719f750eee54774a17e39b/g" \
+    | sed "s/\$IMAGE_BILLING_USAGE_REPORT_APP/${REGISTRY_PATH}\/jtbillingapp@sha256:27774e0f709e3863be15e825838a723419c5332494b6f81261869ef950698d5f/g" \
+    | sed "s/\$JULIATEAM_HOSTNAME//g" \
+    | sed "s/\$OVERWRITE/true/g" \
+    | sed "s/\$POOL_NAME/pool-1/g" \
+    | sed "s/\$JC_AUTH_TOKEN/${JC_AUTH_TOKEN}/g" \
+    | kubectl create -f -
+
+
+# export REGISTRY=gcr.io/$(gcloud config get-value project | tr ':' '/')
+# export TAG=1.1
+

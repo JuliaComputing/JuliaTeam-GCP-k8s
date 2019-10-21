@@ -1,0 +1,160 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: juliateam
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: juliateam-data
+  namespace: juliateam
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 200G
+  accessModes:
+    - ReadWriteMany
+  gcePersistentDisk:
+    pdName: juliateam-data
+    fsType: ext4
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: juliateam-app-pvc
+  namespace: juliateam
+  labels:
+    app.kubernetes.io/name: juliateam-app-instance
+    app.kubernetes.io/component: juliateam-app-instance
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200G
+  storageClassName: ""
+  volumeName: "juliateam-data"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: juliateam-app-svc
+  namespace: juliateam
+  labels: &DeploymentLabels
+    app.kubernetes.io/name: juliateam-app-instance
+    app.kubernetes.io/component: juliateam-app-instance
+spec:
+  type: LoadBalancer
+  selector: *DeploymentLabels
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8888
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 8889
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: juliateam
+  namespace: juliateam
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: juliateamclusterrolebinding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: juliateam
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: juliarun
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: juliarun
+  namespace: juliarun
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: juliateam-app-deployment
+  namespace: juliateam
+  labels: &DeploymentLabels
+    app.kubernetes.io/name: juliateam-app-instance
+    app.kubernetes.io/component: juliateam-app-instance
+spec:
+  replicas: 1
+  selector:
+    matchLabels: *DeploymentLabels
+  template:
+    metadata:
+      labels: *DeploymentLabels
+    spec:
+      volumes:
+      - name: juliateam-app-pvc
+        persistentVolumeClaim:
+          claimName: juliateam-app-pvc
+      containers:
+      - name: juliateam-app-instance
+        image: $IMAGE_JULIATEAM_APP
+        resources:
+          requests:
+            memory: "4.0Gi"
+            cpu: "4"
+          limits:
+            memory: "4.0Gi"
+            cpu: "4"
+        ports:
+        - containerPort: 8888
+        - containerPort: 8889
+        volumeMounts:
+        - name: juliateam-app-pvc
+          mountPath: /configroot
+        env:
+        - name: JULIATEAM_HOSTNAME
+          value: '$JULIATEAM_HOSTNAME'
+        - name: IMAGE_JULIATEAM_APP
+          value: '$IMAGE_JULIATEAM_APP'
+        - name: OVERWRITE
+          value: '$OVERWRITE'
+        - name: CLUSTER_NODE_POOL_PREFIX
+          value: '$POOL_NAME'
+        - name: JC_AUTH_TOKEN
+          value: '$JC_AUTH_TOKEN'
+      - name: ubbagent
+        image: '$IMAGE_UBBAGENT'
+        ports:
+        - containerPort: 3456
+        volumeMounts:
+        - name: juliateam-app-pvc
+          mountPath: /configroot
+        env:
+        - name: AGENT_CONFIG_FILE
+          value: '/configroot/billing/gcpbillingagent_config.yaml'
+        - name: AGENT_STATE_DIR
+          value: '/configroot/billing/state'
+        - name: AGENT_LOCAL_PORT
+          value: '3456'
+      - name: billing-usage-report-app
+        image: '$IMAGE_BILLING_USAGE_REPORT_APP'
+        volumeMounts:
+        - name: juliateam-app-pvc
+          mountPath: /configroot
+        env:
+        - name: IMAGE_BILLING_USAGE_REPORT_APP
+          value: '$IMAGE_BILLING_USAGE_REPORT_APP'
+---
+
