@@ -1,0 +1,50 @@
+application_api_version: v1beta1
+properties:
+  APP_INSTANCE_NAME:
+    type: string
+    default: juliateam
+    x-google-marketplace:
+      type: NAME
+  # NAMESPACE:
+  #   type: string
+  #   x-google-marketplace:
+  #     type: NAMESPACE
+  IMAGE_JULIATEAM_APP:
+    type: string
+    default: $REGISTRY:$TAG
+    x-google-marketplace:
+      type: IMAGE
+  JULIATEAM_HOSTNAME:
+    type: string
+    default: ''
+    description: 'Hostname if JuliaTeam is accessed with this hostname. Ensure that DNS configuration is done appropriately.'
+    x-google-marketplace:
+      type: STRING
+  # OVERWRITE:
+  #   type: string
+  #   default: 'true'
+  POOL_NAME:
+    type: string
+    default: default-pool
+    description: 'Pool name to which the nodes in the cluster belong to. These are the nodes that will be used to run JuliaRun jobs.'
+    x-google-marketplace:
+      type: STRING
+  JC_AUTH_TOKEN:
+    type: string
+    description: JC Authorization Token. Write to info@juliacomputing.com
+    x-google-marketplace:
+      type: STRING
+  IMAGE_UBBAGENT:
+    type: string
+    default: $REGISTRY/ubbagent:$TAG
+    x-google-marketplace:
+      type: IMAGE
+  IMAGE_BILLING_USAGE_REPORT_APP:
+    type: string
+    default: $REGISTRY/jtbillingapp:$TAG
+    x-google-marketplace:
+      type: IMAGE
+required:
+- APP_INSTANCE_NAME
+- POOL_NAME
+- JC_AUTH_TOKEN
