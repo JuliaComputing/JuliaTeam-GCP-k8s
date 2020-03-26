@@ -1,6 +1,146 @@
+x-google-marketplace:
+  schemaVersion: v2
+
+
+  applicationApiVersion: v1beta1
+
+  publishedVersion: "$TAG"
+  publishedVersionMetadata:
+    releaseNote: >-
+      Initial release.
+
+    # releaseTypes list is optional.
+    # "Security" should only be used if this is an important update to patch
+    # an existing vulnerability, as such updates will display more prominently for users.
+    releaseTypes:
+    - Feature
+    - BugFix
+    - Security
+
+    # If "recommended" is "true", users using older releases are encouraged
+    # to update as soon as possible. This is useful if, for example, this release
+    # fixes a critical issue.
+    recommended: true
+
+
+  # This MUST be specified to indicate that the deployer supports managed updates.
+  # Note that this could be left out or kalmSupported set to false, in
+  # which case the deployer uses schema v2 but does not support updates.
+  managedUpdates:
+    kalmSupported: false
+
+  # Image declaration is required here. Refer to the Images section below.
+  images:
+    IMAGE_JULIATEAM_APP:
+      properties:
+        imageRepo:
+          type: REPO_WITH_REGISTRY
+        imageTag:
+          type: TAG
+    IMAGE_UBBAGENT:
+      properties:
+        imageRepo:
+          type: REPO_WITH_REGISTRY
+        imageTag:
+          type: TAG
+    IMAGE_BILLING_USAGE_REPORT_APP:
+      properties:
+        imageRepo:
+          type: REPO_WITH_REGISTRY
+        imageTag:
+          type: TAG
+    # Other fields, like clusterConstraints, can be included here.
+# The Properties and Required sections of v2 are structured the same as those of v1.
+application_api_version: v1beta1
 properties:
-  testerImage:
+  default:
     type: string
-    default: $REGISTRY/tester:$TAG
-    x-google-property:
-      type: IMAGE
+    title: JuliaTeam Service Account
+    x-google-marketplace:
+      type: SERVICE_ACCOUNT
+      namespace: juliateam
+      serviceAccount:
+        roles:
+        - type: ClusterRole        # This is a cluster-wide ClusterRole
+          rulesType: PREDEFINED
+          rulesFromRoleName: cluster-admin  # Use predefined role named "cluster-admin"
+  myapp-deployer-sa:
+    type: string
+    title: JuliaTeam Deployer Service Account
+    x-google-marketplace:
+      type: SERVICE_ACCOUNT
+      namespace: juliateam
+      serviceAccount:
+        roles:
+        - type: ClusterRole        # This is a cluster-wide ClusterRole
+          rulesType: PREDEFINED
+          rulesFromRoleName: cluster-admin  # Use predefined role named "cluster-admin"
+  APP_INSTANCE_NAME:
+    type: string
+    default: 'myapp'
+    x-google-marketplace:
+      type: NAME
+  NAMESPACE:
+    type: string
+    default: 'juliateam'
+    x-google-marketplace:
+      type: NAMESPACE
+  # IMAGE_JULIATEAM_APP:
+  #   type: string
+  #   title: 'Custom Job Image'
+  #   default: $REGISTRY:$TAG
+  #   x-google-marketplace:
+  #     type: IMAGE
+  JULIATEAM_HOSTNAME:
+    type: string
+    default: ''
+    title: 'JuliaTeam Server Name (Optional)'
+    description: 'Hostname if JuliaTeam is to be accessed with this hostname. Ensure that DNS configuration is done appropriately.'
+    x-google-marketplace:
+      type: STRING
+  CLUSTER_NODE_POOL_PREFIX:
+    type: string
+    title: 'Node Pool Prefix'
+    description: 'Cluster Node Pool Prefix'
+    default: 'cluster-1'
+  OVERWRITE:
+    type: string
+    title: 'Overwrite'
+    description: 'Overwrite existing configuration'
+    default: 'true'
+  CPU_POOL_NAME:
+    type: string
+    default: pool-1
+    title: 'Kubernetes CPU Node Pool Name'
+    description: 'Pool name to which the CPU nodes in the cluster belong to. These are the nodes that will be used to run JuliaRun GPU jobs.'
+    x-google-marketplace:
+      type: STRING
+  GPU_POOL_NAME:
+    type: string
+    default: pool-2
+    title: 'Kubernetes GPU Node Pool Name'
+    description: 'Pool name to which the GPU nodes in the cluster belong to. These are the nodes that will be used to run JuliaRun GPU jobs.'
+    x-google-marketplace:
+      type: STRING
+  JC_AUTH_TOKEN:
+    type: string
+    title: 'Julia Computing Authorization Token'
+    default: ''
+    description: JC Authorization Token. Write to info@juliacomputing.com
+    x-google-marketplace:
+      type: STRING
+  # IMAGE_UBBAGENT:
+  #   type: string
+  #   default: $REGISTRY/ubbagent:$TAG
+  #   x-google-marketplace:
+  #     type: IMAGE
+  # IMAGE_BILLING_USAGE_REPORT_APP:
+  #   type: string
+  #   default: $REGISTRY/jtbillingapp:$TAG
+  #   x-google-marketplace:
+  #     type: IMAGE
+required:
+- APP_INSTANCE_NAME
+- CPU_POOL_NAME
+- GPU_POOL_NAME
+- JC_AUTH_TOKEN

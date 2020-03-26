@@ -5,19 +5,10 @@ metadata:
   name: juliateam
 ---
 apiVersion: v1
-kind: PersistentVolume
+kind: ServiceAccount
 metadata:
-  name: juliateam-data
+  name: default
   namespace: juliateam
-spec:
-  storageClassName: ""
-  capacity:
-    storage: 200G
-  accessModes:
-    - ReadWriteMany
-  gcePersistentDisk:
-    pdName: juliateam-data
-    fsType: ext4
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -35,6 +26,74 @@ spec:
       storage: 200G
   storageClassName: ""
   volumeName: "juliateam-data"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: juliateam-data
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 200G
+  accessModes:
+    - ReadWriteMany
+  gcePersistentDisk:
+    pdName: juliateam-data
+    fsType: ext4
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: juliateamclusterrolebinding
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: juliateam
+  - kind: ServiceAccount
+    name: myapp-deployer-sa
+    namespace: juliateam
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: juliateam-role
+  namespace: juliateam
+rules:
+- apiGroups: [ "", "rbac.authorization.k8s.io" ]
+  resources: [ "pods", "services", "nodes", "roles", "persistentvolumes", "persistentvolumeclaims", "clusterrolebindings" ]
+  verbs: [ "*" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: juliateam-rb
+  namespace: juliateam
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: juliateam-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: juliateam
+---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: juliateam-cluster-admin
+#   annotations:
+#     rbac.authorization.kubernetes.io/autoupdate: "true"
+# rules:
+# - apiGroups: ["", "rbac.authorization.k8s.io"]
+#   resources: [ "pods", "services", "nodes", "roles", "persistentvolumes", "persistentvolumeclaims", "clusterrolebindings", "clusterroles" ]
+#   verbs: [ "*" ]
+# ---
 ---
 kind: Service
 apiVersion: v1
@@ -57,36 +116,17 @@ spec:
       port: 443
       targetPort: 8889
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: juliateam
-  namespace: juliateam
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: juliateamclusterrolebinding
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: juliateam
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: juliarun
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: juliarun
-  namespace: juliarun
----
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: juliarun
+# ---
+# apiVersion: v1
+# kind: ServiceAccount
+# metadata:
+#   name: juliarun
+#   namespace: juliarun
+# ---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -112,17 +152,22 @@ spec:
         image: $IMAGE_JULIATEAM_APP
         resources:
           requests:
-            memory: "4.0Gi"
-            cpu: "4"
+            memory: "8.0Gi"
+            cpu: "2"
           limits:
-            memory: "4.0Gi"
-            cpu: "4"
+            memory: "8.0Gi"
+            cpu: "2"
         ports:
         - containerPort: 8888
         - containerPort: 8889
+        imagePullPolicy: Always
         volumeMounts:
         - name: juliateam-app-pvc
           mountPath: /configroot
+          readOnly: false
+        securityContext:
+          privileged: true
+          allowPrivilegeEscalation: true
         env:
         - name: JULIATEAM_HOSTNAME
           value: '$JULIATEAM_HOSTNAME'
@@ -131,11 +176,22 @@ spec:
         - name: OVERWRITE
           value: '$OVERWRITE'
         - name: CLUSTER_NODE_POOL_PREFIX
-          value: '$POOL_NAME'
+          value: '$CLUSTER_NODE_POOL_PREFIX'
+        - name: CPU_POOL_NAME
+          value: '$CPU_POOL_NAME'
+        - name: GPU_POOL_NAME
+          value: '$GPU_POOL_NAME'
         - name: JC_AUTH_TOKEN
           value: '$JC_AUTH_TOKEN'
       - name: ubbagent
         image: '$IMAGE_UBBAGENT'
+        # resources:
+        #   requests:
+        #     memory: "0.5Gi"
+        #     cpu: "500m"
+        #   limits:
+        #     memory: "0.5Gi"
+        #     cpu: "500m"
         ports:
         - containerPort: 3456
         volumeMounts:

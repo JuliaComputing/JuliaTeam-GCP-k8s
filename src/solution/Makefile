@@ -6,6 +6,7 @@ include ../var.Makefile
 TAG ?= latest
 
 $(info ---- TAG = $(TAG))
+$(info ---- TEAMSERVER_VERSION = $(TEAMSERVER_VERSION))
 
 APP_DEPLOYER_IMAGE ?= $(REGISTRY)/juliateam-app/deployer:$(TAG)
 NAME ?= juliateam-app-1
@@ -65,8 +66,8 @@ app/build:: .build/juliateam-app/deployer \
                               .build/var/TAG \
                               | .build/juliateam-app
 
-	docker pull gcr.io/juliarun-cloud/gcpteamsrvr:v1.1.0
-	docker tag gcr.io/juliarun-cloud/gcpteamsrvr:v1.1.0 \
+	docker pull gcr.io/juliarun-cloud/gcpteamsrvr:$(TEAMSERVER_VERSION)
+	docker tag gcr.io/juliarun-cloud/gcpteamsrvr:$(TEAMSERVER_VERSION) \
 	    "$(REGISTRY)/juliateam-app:$(TAG)"
 	docker push "$(REGISTRY)/juliateam-app:$(TAG)"
 

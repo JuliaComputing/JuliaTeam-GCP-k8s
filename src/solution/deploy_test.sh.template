@@ -13,5 +13,5 @@ cat ./manifest/manifests.yaml \
 
 
 # export REGISTRY=gcr.io/$(gcloud config get-value project | tr ':' '/')
-# export TAG=1.1
+# export TAG=1.3
 

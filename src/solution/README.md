@@ -134,7 +134,7 @@ export POOL_NAME="default-pool"
 Configure the container image:
 
 ```shell
-export IMAGE_JULIATEAM_APP="marketplace.gcr.io/juliacomputing/juliateam-app:1.1"
+export IMAGE_JULIATEAM_APP="marketplace.gcr.io/juliacomputing/juliateam-app:1.3"
 ```
 
 The image above is referenced by
