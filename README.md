@@ -199,7 +199,7 @@ How to backup and restore JuliaTeam Application
 It is important to backup the disk on which JuliaTeam config folder exist. Look for the `juliateam-data` disk in the project where JuliaTeam is installed and backup the disk.
 
 ## Restoring your data
-Rename the restored disk and `juliateam-data` and restart the application by running `bootstrap.sh` command. See https://storage.googleapis.com/marketplaceresources/JuliaTeam-v1.1.0-Installation-Guide.pdf for more details.
+Rename the restored disk and `juliateam-data` and restart the application by running `bootstrap.sh` command. See https://storage.googleapis.com/marketplaceresources/JuliaTeamInstallationGuideComplete_v1.3.0.pdf for more details.
 
 # Updating
 
